@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.chapter05.mapper.Chapter05EmpMapper">
+    <resultMap id="empWithDeptMap" type="com.example.chapter05.entity.Emp">
+        <id property="empno" column="empno"/>
+        <result property="ename" column="ename"/>
+        <result property="job" column="job"/>
+        <result property="mgr" column="mgr"/>
+        <result property="hiredate" column="hiredate"/>
+        <result property="sal" column="sal"/>
+        <result property="comm" column="comm"/>
+        <result property="deptno" column="emp_deptno"/>
+        <association property="dept" javaType="com.example.chapter05.entity.Dept">
+            <id property="deptno" column="deptno"/>
+            <result property="dname" column="dname"/>
+            <result property="loc" column="loc"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="empWithSkillsMap" type="com.example.chapter05.entity.Emp">
+        <id property="empno" column="empno"/>
+        <result property="ename" column="ename"/>
+        <result property="job" column="job"/>
+        <result property="sal" column="sal"/>
+        <result property="deptno" column="deptno"/>
+        <collection property="skills" ofType="com.example.chapter05.entity.Skill">
+            <id property="id" column="skill_id"/>
+            <result property="name" column="skill_name"/>
+            <result property="description" column="skill_desc"/>
+        </collection>
+    </resultMap>
+
+    <select id="one2oneByXml" parameterType="java.lang.Integer" resultMap="empWithDeptMap">
+        SELECT e.empno, e.ename, e.job, e.sal, e.mgr, e.hiredate, e.comm,
+               e.deptno AS emp_deptno, d.deptno, d.dname, d.loc
+        FROM emp e LEFT JOIN dept d ON e.deptno = d.deptno
+        WHERE e.empno = #{empno}
+    </select>
+
+    <select id="many2oneByXml" resultMap="empWithDeptMap">
+        SELECT e.empno, e.ename, e.job, e.sal, e.mgr, e.hiredate, e.comm,
+               e.deptno AS emp_deptno, d.deptno, d.dname, d.loc
+        FROM emp e LEFT JOIN dept d ON e.deptno = d.deptno
+        ORDER BY e.empno
+    </select>
+
+    <select id="many2manyByXml" parameterType="java.lang.Integer" resultMap="empWithSkillsMap">
+        SELECT DISTINCT e.empno, e.ename, e.job, e.sal, e.deptno,
+               s.id AS skill_id, s.name AS skill_name, s.description AS skill_desc
+        FROM emp e
+        LEFT JOIN emp_skill es ON e.empno = es.empno
+        LEFT JOIN skill s ON es.skill_id = s.id
+        WHERE e.empno = #{empno}
+        ORDER BY s.id
+    </select>
+</mapper>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.chapter05.mapper.Chapter05BusinessMapper">
+    <select id="findProductsBySupplier" resultType="java.lang.String">
+        SELECT p.product_name
+        FROM supplier_product sp JOIN product p ON p.product_id = sp.product_id
+        WHERE sp.supplier_id = #{supplierId}
+        ORDER BY p.product_id
+    </select>
+
+    <select id="findSuppliersByProduct" resultType="java.lang.String">
+        SELECT s.supplier_name
+        FROM supplier_product sp JOIN supplier s ON s.supplier_id = sp.supplier_id
+        WHERE sp.product_id = #{productId}
+        ORDER BY s.supplier_id
+    </select>
+
+    <resultMap id="purchaseDetailMap" type="com.example.chapter05.entity.PurchaseDetail">
+        <id property="purchaseId" column="purchase_id"/>
+        <result property="customerName" column="customer_name"/>
+        <result property="supplierName" column="supplier_name"/>
+        <result property="productName" column="product_name"/>
+        <result property="quantity" column="quantity"/>
+        <result property="unitPrice" column="unit_price"/>
+        <result property="purchasedAt" column="purchased_at"/>
+        <result property="serviceType" column="service_type"/>
+        <result property="serviceNote" column="service_note"/>
+    </resultMap>
+
+    <sql id="purchaseDetails">
+        SELECT pu.purchase_id, c.customer_name, s.supplier_name, p.product_name,
+               pu.quantity, pu.unit_price, pu.purchased_at,
+               ps.service_type, ps.service_note
+        FROM purchase pu
+        JOIN customer c ON c.customer_id = pu.customer_id
+        JOIN supplier s ON s.supplier_id = pu.supplier_id
+        JOIN product p ON p.product_id = pu.product_id
+        LEFT JOIN product_service ps ON ps.purchase_id = pu.purchase_id
+    </sql>
+
+    <select id="findPurchasesByCustomer" resultMap="purchaseDetailMap">
+        <include refid="purchaseDetails"/>
+        WHERE pu.customer_id = #{customerId}
+        ORDER BY pu.purchased_at, pu.purchase_id
+    </select>
+
+    <select id="findSalesBySupplier" resultMap="purchaseDetailMap">
+        <include refid="purchaseDetails"/>
+        WHERE pu.supplier_id = #{supplierId}
+        ORDER BY pu.purchased_at, pu.purchase_id
+    </select>
+
+    <select id="findServiceRecordsByProduct" resultMap="purchaseDetailMap">
+        <include refid="purchaseDetails"/>
+        WHERE pu.product_id = #{productId} AND ps.service_id IS NOT NULL
+        ORDER BY ps.serviced_at, ps.service_id
+    </select>
+</mapper>
