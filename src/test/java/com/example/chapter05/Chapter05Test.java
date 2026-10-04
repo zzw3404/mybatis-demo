@@ -5,6 +5,7 @@ import com.example.chapter05.entity.Emp;
 import com.example.chapter05.entity.Skill;
 import com.example.chapter05.mapper.Chapter05DeptMapper;
 import com.example.chapter05.mapper.Chapter05EmpMapper;
+import com.example.chapter05.mapper.Chapter05SkillMapper;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -128,6 +129,28 @@ public class Chapter05Test {
             assertEquals("JONES", emp.getEname());
             List<Skill> skills = emp.getSkills();
             assertEquals(3, skills.size());
+        }
+    }
+
+    @Test
+    public void testMany2manyReverseByXml() {
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            Skill skill = session.getMapper(Chapter05SkillMapper.class).findByIdWithEmployeesByXml(3);
+            assertNotNull(skill);
+            assertEquals("MyBatis", skill.getName());
+            assertEquals(3, skill.getEmps().size());
+            assertEquals("JONES", skill.getEmps().get(0).getEname());
+        }
+    }
+
+    @Test
+    public void testMany2manyReverseByAnnotation() {
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            Skill skill = session.getMapper(Chapter05SkillMapper.class).findByIdWithEmployeesByAnnotation(3);
+            assertNotNull(skill);
+            assertEquals("MyBatis", skill.getName());
+            assertEquals(3, skill.getEmps().size());
+            assertEquals("JONES", skill.getEmps().get(0).getEname());
         }
     }
 

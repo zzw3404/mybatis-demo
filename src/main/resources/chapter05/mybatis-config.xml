@@ -26,5 +26,6 @@
         <mapper resource="chapter05/mapper/Chapter05EmpMapper.xml"/>
         <mapper resource="chapter05/mapper/Chapter05DeptMapper.xml"/>
         <mapper resource="chapter05/mapper/Chapter05BusinessMapper.xml"/>
+        <mapper resource="chapter05/mapper/Chapter05SkillMapper.xml"/>
     </mappers>
 </configuration>
