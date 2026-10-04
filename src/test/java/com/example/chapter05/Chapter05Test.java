@@ -41,6 +41,16 @@ public class Chapter05Test {
     }
 
     @Test
+    public void testOne2oneByXmlNestedSelect() {
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            Emp emp = session.getMapper(Chapter05EmpMapper.class).one2oneByXmlSelect(1);
+            assertNotNull(emp);
+            assertEquals("SMITH", emp.getEname());
+            assertEquals("RESEARCH", emp.getDept().getDname());
+        }
+    }
+
+    @Test
     public void testOne2oneByAnnotation() {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             Emp emp = session.getMapper(Chapter05EmpMapper.class).one2oneByAnn(2);
@@ -55,7 +65,19 @@ public class Chapter05Test {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             List<Emp> emps = session.getMapper(Chapter05EmpMapper.class).many2oneByXml();
             assertEquals(14, emps.size());
-            assertEquals("ACCOUNTING", emps.get(0).getDept().getDname());
+            assertEquals("RESEARCH", emps.get(0).getDept().getDname());
+        }
+    }
+
+    @Test
+    public void testMany2oneByXmlNestedSelect() {
+        try (SqlSession session = sqlSessionFactory.openSession()) {
+            List<Emp> emps = session.getMapper(Chapter05EmpMapper.class).many2oneByXmlSelect();
+            assertEquals(14, emps.size());
+            assertEquals("SMITH", emps.get(0).getEname());
+            assertEquals("RESEARCH", emps.get(0).getDept().getDname());
+            assertEquals("ALLEN", emps.get(1).getEname());
+            assertEquals("SALES", emps.get(1).getDept().getDname());
         }
     }
 

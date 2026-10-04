@@ -19,6 +19,20 @@
         </association>
     </resultMap>
 
+    <resultMap id="empWithDeptSelectMap" type="com.example.chapter05.entity.Emp">
+        <id property="empno" column="empno"/>
+        <result property="ename" column="ename"/>
+        <result property="job" column="job"/>
+        <result property="mgr" column="mgr"/>
+        <result property="hiredate" column="hiredate"/>
+        <result property="sal" column="sal"/>
+        <result property="comm" column="comm"/>
+        <result property="deptno" column="deptno"/>
+        <association property="dept" javaType="com.example.chapter05.entity.Dept"
+                     select="com.example.chapter05.mapper.Chapter05DeptMapper.findById"
+                     column="deptno"/>
+    </resultMap>
+
     <resultMap id="empWithSkillsMap" type="com.example.chapter05.entity.Emp">
         <id property="empno" column="empno"/>
         <result property="ename" column="ename"/>
@@ -39,11 +53,23 @@
         WHERE e.empno = #{empno}
     </select>
 
+    <select id="one2oneByXmlSelect" parameterType="java.lang.Integer" resultMap="empWithDeptSelectMap">
+        SELECT empno, ename, job, mgr, hiredate, sal, comm, deptno
+        FROM emp
+        WHERE empno = #{empno}
+    </select>
+
     <select id="many2oneByXml" resultMap="empWithDeptMap">
         SELECT e.empno, e.ename, e.job, e.sal, e.mgr, e.hiredate, e.comm,
                e.deptno AS emp_deptno, d.deptno, d.dname, d.loc
         FROM emp e LEFT JOIN dept d ON e.deptno = d.deptno
         ORDER BY e.empno
+    </select>
+
+    <select id="many2oneByXmlSelect" resultMap="empWithDeptSelectMap">
+        SELECT empno, ename, job, mgr, hiredate, sal, comm, deptno
+        FROM emp
+        ORDER BY empno
     </select>
 
     <select id="many2manyByXml" parameterType="java.lang.Integer" resultMap="empWithSkillsMap">

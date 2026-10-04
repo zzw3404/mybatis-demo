@@ -15,6 +15,8 @@ public interface Chapter05EmpMapper {
 
     Emp one2oneByXml(Integer empno);
 
+    Emp one2oneByXmlSelect(Integer empno);
+
     @Select("SELECT empno, ename, job, sal, deptno FROM emp WHERE empno = #{empno}")
     @Results(id = "empWithDeptByAnnotation", value = {
             @Result(id = true, property = "empno", column = "empno"),
@@ -28,6 +30,8 @@ public interface Chapter05EmpMapper {
     Emp one2oneByAnn(Integer empno);
 
     List<Emp> many2oneByXml();
+
+    List<Emp> many2oneByXmlSelect();
 
     @Select("SELECT empno, ename, job, sal, deptno FROM emp ORDER BY empno")
     @Results(id = "empListWithDeptByAnnotation", value = {
