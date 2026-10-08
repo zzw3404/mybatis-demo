@@ -21,9 +21,12 @@
 - `chapter01`：MyBatis 基础配置、XML CRUD、日志和注解。
 - `chapter02`：`resultType`/`resultMap`、VO、员工与部门关系映射。
 - `chapter05`：员工/部门一对一、多对一、一对多和员工/技能多对多；另含截图要求的供应商/商品/客户采购及售后查询。
+- `chapter08`：MyBatis-Plus 独立构建链路、`BaseMapper` CRUD 起步示例（逐步扩展）。
 
 chapter05 的配置文件为 `src/main/resources/chapter05/mybatis-config.xml`。数据库脚本为 `sql/chapter05_schema.sql`。
 关联映射实现对照、SQL 次数实测及适用场景见 [`docs/chapter05-association-summary.md`](docs/chapter05-association-summary.md)。
+
+chapter08 的 MyBatis-Plus 配置为 `src/main/resources/chapter08/mybatis-plus-config.xml`。首次运行前请在 MySQL 中手动执行 `sql/chapter08_mp_student.sql` 创建练习表，然后运行 `./mvnw.cmd -Dtest=StudentBaseMapperTest test`。
 
 如果终端提示 `JAVA_HOME` 未设置，可在 Windows 用户环境变量中设置：
 `JAVA_HOME=C:\Program Files\Microsoft\jdk-17.0.11.9-hotspot`，并将 `%JAVA_HOME%\bin` 加入 `Path`。
