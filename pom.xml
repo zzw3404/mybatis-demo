@@ -27,6 +27,13 @@
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus</artifactId>
             <version>${mybatis-plus.version}</version>
+            <!-- 本项目使用原生 MyBatis，不启用 Spring；排除适配模块避免加载 Spring DAO 服务实现。 -->
+            <exclusions>
+                <exclusion>
+                    <groupId>com.baomidou</groupId>
+                    <artifactId>mybatis-plus-spring</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.baomidou</groupId>
