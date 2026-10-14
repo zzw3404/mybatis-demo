@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.chapter05.mapper.Chapter05SupplierMapper">
+    <resultMap id="SupplierWithProductsMap" type="com.example.chapter05.entity.Supplier">
+        <id property="supplierId" column="supplier_id"/>
+        <result property="supplierName" column="supplier_name"/>
+        <result property="contactName" column="contact_name"/>
+        <result property="phone" column="supplier_phone"/>
+        <result property="address" column="supplier_address"/>
+        <collection property="products" ofType="com.example.chapter05.entity.Product">
+            <id property="productId" column="product_id"/>
+            <result property="productName" column="product_name"/>
+            <result property="category" column="product_category"/>
+            <result property="unitPrice" column="product_price"/>
+        </collection>
+    </resultMap>
+
+    <select id="findAllWithProducts" resultMap="SupplierWithProductsMap">
+        SELECT s.supplier_id, s.supplier_name, s.contact_name,
+               s.phone AS supplier_phone, s.address AS supplier_address,
+               p.product_id, p.product_name, p.category AS product_category,
+               p.unit_price AS product_price
+        FROM supplier s
+        LEFT JOIN supplier_product sp ON sp.supplier_id = s.supplier_id
+        LEFT JOIN product p ON p.product_id = sp.product_id
+        ORDER BY s.supplier_id, p.product_id
+    </select>
+
+    <select id="findWithProductsById" resultMap="SupplierWithProductsMap">
+        SELECT s.supplier_id, s.supplier_name, s.contact_name,
+               s.phone AS supplier_phone, s.address AS supplier_address,
+               p.product_id, p.product_name, p.category AS product_category,
+               p.unit_price AS product_price
+        FROM supplier s
+        LEFT JOIN supplier_product sp ON sp.supplier_id = s.supplier_id
+        LEFT JOIN product p ON p.product_id = sp.product_id
+        WHERE s.supplier_id = #{supplierId}
+        ORDER BY p.product_id
+    </select>
+</mapper>

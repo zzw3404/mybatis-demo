@@ -20,7 +20,7 @@
 
 - `chapter01`：MyBatis 基础配置、XML CRUD、日志和注解。
 - `chapter02`：`resultType`/`resultMap`、VO、员工与部门关系映射。
-- `chapter05`：员工/部门一对一、多对一、一对多和员工/技能多对多；另含截图要求的供应商/商品/客户采购及售后查询。
+- `chapter05`：员工/部门一对一、多对一、一对多和员工/技能多对多；供应商/商品/客户还包含 XML `<collection>` 嵌套对象映射、采购记录及售后查询。
 - `chapter08`：MyBatis-Plus 独立构建链路、`BaseMapper` CRUD、条件构造器与高级查询、分页、自动填充、逻辑删除、乐观锁，以及基于 `SELECT ... FOR UPDATE` 的悲观锁事务演示。
 
 chapter05 的配置文件为 `src/main/resources/chapter05/mybatis-config.xml`。数据库脚本为 `sql/chapter05_schema.sql`。

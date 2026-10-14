@@ -11,6 +11,16 @@
 | 多对多：员工 → 技能 | `Chapter05EmpMapper.xml` 经 `emp_skill` 两次 JOIN，并用 `<collection>` | `Chapter05EmpMapper.many2manyByAnn` 用 `@Many` 调用 `selectSkillsByEmpno` | `Emp.skills` 是技能集合。中间表保存关系；员工主键用于归并，技能列用别名映射，SQL 使用 `DISTINCT`。 |
 | 多对多反向：技能 → 员工 | `Chapter05SkillMapper.xml` 经 `emp_skill` JOIN 员工，并映射 `<collection property="emps">` | `Chapter05SkillMapper.findByIdWithEmployeesByAnnotation` 用 `@Many` 调用 `findEmployeesBySkillId` | `Skill.emps` 表示掌握该技能的员工集合；员工子查询不再加载技能集合，避免双向递归。 |
 
+供应商/商品/客户业务模型也提供对象图映射示例，代码位于同一 `chapter05` 分层目录：
+
+| 查询方向 | Mapper XML | 对象关系 |
+|---|---|---|
+| 供应商 → 商品 | `Chapter05SupplierMapper.xml` | `Supplier.products`；通过 `supplier_product` 多对多关联表装配。 |
+| 商品 → 供应商、购买客户 | `Chapter05ProductMapper.xml` | `Product.suppliers` 和 `Product.customers`；客户关系来自真实 `purchase` 记录。 |
+| 客户 → 已购商品、交易供应商 | `Chapter05CustomerMapper.xml` | `Customer.products` 和 `Customer.suppliers`；供应商不是独立手工关系，而是从采购记录推导。 |
+
+上述映射均使用 `<collection>` 的 `<id>` 声明子对象主键。商品同时联查多个供应商和多个购买客户时，SQL 平面结果可能产生组合重复行；MyBatis 会按父、子对象 ID 合并集合，避免同一供应商或客户被重复装入。与简单的 `customer_supplier` 关系表相比，本项目的客户—供应商联系依附于采购事实，因此可以追溯买了什么以及从谁处购买。
+
 ## SQL 次数实测
 
 次数由测试专用 `SqlStatementCounter` 拦截 MyBatis 的 `StatementHandler.prepare` 统计。嵌套查询只有在访问关联属性时才会触发延迟加载；以下比较都访问了关联数据：
@@ -27,6 +37,7 @@
 ## 代码与验证入口
 
 - 关联 Mapper：`src/main/java/com/example/chapter05/mapper/Chapter05EmpMapper.java`、`Chapter05DeptMapper.java`、`Chapter05SkillMapper.java`。
+- 供应商/商品/客户对象图：`Chapter05SupplierMapper`、`Chapter05ProductMapper`、`Chapter05CustomerMapper` 及对应的 `src/main/resources/chapter05/mapper/` XML；断言测试见 `Chapter05BusinessAssociationMapperTest`。
 - XML 映射：`src/main/resources/chapter05/mapper/`。
 - MyBatis 延迟加载配置：`src/main/resources/chapter05/mybatis-config.xml` 中 `lazyLoadingEnabled=true`、`aggressiveLazyLoading=false`。
 - 结果一致性和 SQL 次数测试：`src/test/java/com/example/chapter05/Chapter05Test.java`。

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.chapter05.mapper.Chapter05CustomerMapper">
+    <resultMap id="CustomerWithPurchaseRelationshipsMap" type="com.example.chapter05.entity.Customer">
+        <id property="customerId" column="customer_id"/>
+        <result property="customerName" column="customer_name"/>
+        <result property="phone" column="customer_phone"/>
+        <result property="address" column="customer_address"/>
+        <collection property="products" ofType="com.example.chapter05.entity.Product">
+            <id property="productId" column="purchased_product_id"/>
+            <result property="productName" column="purchased_product_name"/>
+            <result property="category" column="purchased_product_category"/>
+            <result property="unitPrice" column="purchased_product_price"/>
+        </collection>
+        <collection property="suppliers" ofType="com.example.chapter05.entity.Supplier">
+            <id property="supplierId" column="purchase_supplier_id"/>
+            <result property="supplierName" column="purchase_supplier_name"/>
+        </collection>
+    </resultMap>
+
+    <sql id="customerPurchaseJoins">
+        FROM customer c
+        LEFT JOIN purchase pu ON pu.customer_id = c.customer_id
+        LEFT JOIN product p ON p.product_id = pu.product_id
+        LEFT JOIN supplier s ON s.supplier_id = pu.supplier_id
+    </sql>
+
+    <select id="findAllWithProductsAndSuppliers" resultMap="CustomerWithPurchaseRelationshipsMap">
+        SELECT c.customer_id, c.customer_name,
+               c.phone AS customer_phone, c.address AS customer_address,
+               p.product_id AS purchased_product_id,
+               p.product_name AS purchased_product_name,
+               p.category AS purchased_product_category,
+               p.unit_price AS purchased_product_price,
+               s.supplier_id AS purchase_supplier_id,
+               s.supplier_name AS purchase_supplier_name
+        <include refid="customerPurchaseJoins"/>
+        ORDER BY c.customer_id, p.product_id, s.supplier_id
+    </select>
+
+    <select id="findWithProductsAndSuppliersById" resultMap="CustomerWithPurchaseRelationshipsMap">
+        SELECT c.customer_id, c.customer_name,
+               c.phone AS customer_phone, c.address AS customer_address,
+               p.product_id AS purchased_product_id,
+               p.product_name AS purchased_product_name,
+               p.category AS purchased_product_category,
+               p.unit_price AS purchased_product_price,
+               s.supplier_id AS purchase_supplier_id,
+               s.supplier_name AS purchase_supplier_name
+        <include refid="customerPurchaseJoins"/>
+        WHERE c.customer_id = #{customerId}
+        ORDER BY p.product_id, s.supplier_id
+    </select>
+</mapper>
