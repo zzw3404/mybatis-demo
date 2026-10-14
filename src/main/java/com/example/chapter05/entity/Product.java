@@ -10,6 +10,10 @@ public class Product {
     private String productName;
     private String category;
     private BigDecimal unitPrice;
+    /** True when at least one purchase exists for this product. */
+    private Boolean sold;
+    /** True when an after-sales service record exists for one of its purchases. */
+    private Boolean serviceAccepted;
     private List<Supplier> suppliers = new ArrayList<>();
     private List<Customer> customers = new ArrayList<>();
 
@@ -21,6 +25,10 @@ public class Product {
     public void setCategory(String category) { this.category = category; }
     public BigDecimal getUnitPrice() { return unitPrice; }
     public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice; }
+    public Boolean getSold() { return sold; }
+    public void setSold(Boolean sold) { this.sold = sold; }
+    public Boolean getServiceAccepted() { return serviceAccepted; }
+    public void setServiceAccepted(Boolean serviceAccepted) { this.serviceAccepted = serviceAccepted; }
     public List<Supplier> getSuppliers() { return suppliers; }
     public void setSuppliers(List<Supplier> suppliers) { this.suppliers = suppliers; }
     public List<Customer> getCustomers() { return customers; }

@@ -17,7 +17,9 @@ import java.io.InputStream;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /** Verifies nested XML collection mappings for the supplier/product/customer domain. */
 public class Chapter05BusinessAssociationMapperTest {
@@ -40,9 +42,18 @@ public class Chapter05BusinessAssociationMapperTest {
             assertEquals("华东电子供应商", supplier.getSupplierName());
             assertEquals(3, supplier.getProducts().size());
             assertEquals("商务笔记本电脑", supplier.getProducts().get(0).getProductName());
+            assertFalse(supplier.getProducts().get(2).getSold());
+            assertTrue(supplier.getProducts().get(0).getServiceAccepted());
 
             List<Supplier> allSuppliers = mapper.findAllWithProducts();
             assertEquals(3, allSuppliers.size());
+
+            List<Supplier> suppliersWithSales = mapper.findAllWithSoldProducts();
+            assertEquals(3, suppliersWithSales.size());
+            Supplier supplierOneSales = suppliersWithSales.get(0);
+            assertEquals(1, supplierOneSales.getSupplierId().intValue());
+            assertEquals(2, supplierOneSales.getProducts().size());
+            assertTrue(supplierOneSales.getProducts().stream().allMatch(Product::getSold));
         }
     }
 
@@ -56,11 +67,15 @@ public class Chapter05BusinessAssociationMapperTest {
             Product laptop = mapper.findWithSuppliersAndCustomersById(1);
             assertNotNull(laptop);
             assertEquals("商务笔记本电脑", laptop.getProductName());
+            assertTrue(laptop.getSold());
+            assertTrue(laptop.getServiceAccepted());
             assertEquals(2, laptop.getSuppliers().size());
             assertEquals(1, laptop.getCustomers().size());
             assertEquals("星河科技有限公司", laptop.getCustomers().get(0).getCustomerName());
 
             Product mouse = mapper.findWithSuppliersAndCustomersById(2);
+            assertTrue(mouse.getSold());
+            assertFalse(mouse.getServiceAccepted());
             assertEquals(3, mouse.getSuppliers().size());
             assertEquals(2, mouse.getCustomers().size());
         }
@@ -76,6 +91,8 @@ public class Chapter05BusinessAssociationMapperTest {
             assertEquals(2, customer.getProducts().size());
             assertEquals(2, customer.getSuppliers().size());
             assertEquals("无线鼠标", customer.getProducts().get(0).getProductName());
+            assertTrue(customer.getProducts().get(0).getSold());
+            assertFalse(customer.getProducts().get(0).getServiceAccepted());
 
             assertEquals(3, mapper.findAllWithProductsAndSuppliers().size());
         }

@@ -13,6 +13,8 @@
             <result property="productName" column="purchased_product_name"/>
             <result property="category" column="purchased_product_category"/>
             <result property="unitPrice" column="purchased_product_price"/>
+            <result property="sold" column="purchased_product_sold"/>
+            <result property="serviceAccepted" column="purchased_product_service_accepted"/>
         </collection>
         <collection property="suppliers" ofType="com.example.chapter05.entity.Supplier">
             <id property="supplierId" column="purchase_supplier_id"/>
@@ -27,28 +29,30 @@
         LEFT JOIN supplier s ON s.supplier_id = pu.supplier_id
     </sql>
 
-    <select id="findAllWithProductsAndSuppliers" resultMap="CustomerWithPurchaseRelationshipsMap">
+    <sql id="customerPurchaseColumns">
         SELECT c.customer_id, c.customer_name,
                c.phone AS customer_phone, c.address AS customer_address,
                p.product_id AS purchased_product_id,
                p.product_name AS purchased_product_name,
                p.category AS purchased_product_category,
                p.unit_price AS purchased_product_price,
+               TRUE AS purchased_product_sold,
+               EXISTS (SELECT 1 FROM product_service ps
+                       JOIN purchase serviced ON serviced.purchase_id = ps.purchase_id
+                       WHERE serviced.product_id = p.product_id
+                         AND serviced.customer_id = c.customer_id) AS purchased_product_service_accepted,
                s.supplier_id AS purchase_supplier_id,
                s.supplier_name AS purchase_supplier_name
+    </sql>
+
+    <select id="findAllWithProductsAndSuppliers" resultMap="CustomerWithPurchaseRelationshipsMap">
+        <include refid="customerPurchaseColumns"/>
         <include refid="customerPurchaseJoins"/>
         ORDER BY c.customer_id, p.product_id, s.supplier_id
     </select>
 
     <select id="findWithProductsAndSuppliersById" resultMap="CustomerWithPurchaseRelationshipsMap">
-        SELECT c.customer_id, c.customer_name,
-               c.phone AS customer_phone, c.address AS customer_address,
-               p.product_id AS purchased_product_id,
-               p.product_name AS purchased_product_name,
-               p.category AS purchased_product_category,
-               p.unit_price AS purchased_product_price,
-               s.supplier_id AS purchase_supplier_id,
-               s.supplier_name AS purchase_supplier_name
+        <include refid="customerPurchaseColumns"/>
         <include refid="customerPurchaseJoins"/>
         WHERE c.customer_id = #{customerId}
         ORDER BY p.product_id, s.supplier_id

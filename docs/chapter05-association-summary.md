@@ -15,9 +15,9 @@
 
 | 查询方向 | Mapper XML | 对象关系 |
 |---|---|---|
-| 供应商 → 商品 | `Chapter05SupplierMapper.xml` | `Supplier.products`；通过 `supplier_product` 多对多关联表装配。 |
-| 商品 → 供应商、购买客户 | `Chapter05ProductMapper.xml` | `Product.suppliers` 和 `Product.customers`；客户关系来自真实 `purchase` 记录。 |
-| 客户 → 已购商品、交易供应商 | `Chapter05CustomerMapper.xml` | `Customer.products` 和 `Customer.suppliers`；供应商不是独立手工关系，而是从采购记录推导。 |
+| 供应商 → 提供商品/已售商品 | `Chapter05SupplierMapper.xml` | `Supplier.products`；`findAllWithProducts` 查供货目录，`findAllWithSoldProducts` 只查真实采购中出现的商品。每个商品带 `sold` 与 `serviceAccepted` 状态。 |
+| 商品 → 供应商、购买客户 | `Chapter05ProductMapper.xml` | `Product.suppliers` 和 `Product.customers`；再以采购和售后记录计算 `sold`、`serviceAccepted`。 |
+| 客户 → 已购商品、交易供应商 | `Chapter05CustomerMapper.xml` | `Customer.products` 和 `Customer.suppliers`；供应商不是独立手工关系，而是从采购记录推导，商品也携带销售与服务状态。 |
 
 上述映射均使用 `<collection>` 的 `<id>` 声明子对象主键。商品同时联查多个供应商和多个购买客户时，SQL 平面结果可能产生组合重复行；MyBatis 会按父、子对象 ID 合并集合，避免同一供应商或客户被重复装入。与简单的 `customer_supplier` 关系表相比，本项目的客户—供应商联系依附于采购事实，因此可以追溯买了什么以及从谁处购买。
 

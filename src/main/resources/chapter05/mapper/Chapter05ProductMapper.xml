@@ -8,6 +8,8 @@
         <result property="productName" column="product_name"/>
         <result property="category" column="category"/>
         <result property="unitPrice" column="unit_price"/>
+        <result property="sold" column="sold"/>
+        <result property="serviceAccepted" column="service_accepted"/>
         <collection property="suppliers" ofType="com.example.chapter05.entity.Supplier">
             <id property="supplierId" column="supplier_id"/>
             <result property="supplierName" column="supplier_name"/>
@@ -26,19 +28,25 @@
         LEFT JOIN customer c ON c.customer_id = pu.customer_id
     </sql>
 
-    <select id="findSoldProductsWithSuppliersAndCustomers" resultMap="ProductWithSuppliersAndCustomersMap">
+    <sql id="productRelationshipColumns">
         SELECT p.product_id, p.product_name, p.category, p.unit_price,
+               EXISTS (SELECT 1 FROM purchase sold WHERE sold.product_id = p.product_id) AS sold,
+               EXISTS (SELECT 1 FROM product_service ps
+                       JOIN purchase serviced ON serviced.purchase_id = ps.purchase_id
+                       WHERE serviced.product_id = p.product_id) AS service_accepted,
                s.supplier_id, s.supplier_name,
                c.customer_id, c.customer_name
+    </sql>
+
+    <select id="findSoldProductsWithSuppliersAndCustomers" resultMap="ProductWithSuppliersAndCustomersMap">
+        <include refid="productRelationshipColumns"/>
         <include refid="productSupplierCustomerJoins"/>
         WHERE EXISTS (SELECT 1 FROM purchase sold WHERE sold.product_id = p.product_id)
         ORDER BY p.product_id, s.supplier_id, c.customer_id
     </select>
 
     <select id="findWithSuppliersAndCustomersById" resultMap="ProductWithSuppliersAndCustomersMap">
-        SELECT p.product_id, p.product_name, p.category, p.unit_price,
-               s.supplier_id, s.supplier_name,
-               c.customer_id, c.customer_name
+        <include refid="productRelationshipColumns"/>
         <include refid="productSupplierCustomerJoins"/>
         WHERE p.product_id = #{productId}
         ORDER BY s.supplier_id, c.customer_id
