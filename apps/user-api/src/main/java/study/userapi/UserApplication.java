@@ -1,0 +1,9 @@
+package study.userapi;
+import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+@SpringBootApplication
+@MapperScan("study.userapi.persistence")
+public class UserApplication {
+    public static void main(String[] argv) { SpringApplication.run(UserApplication.class,argv); }
+}

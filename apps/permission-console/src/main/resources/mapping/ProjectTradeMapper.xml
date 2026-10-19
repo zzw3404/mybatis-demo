@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="study.console.TradeMapper">
+<select id="vendors" resultType="map">SELECT supplier_id AS "id",supplier_name AS "supplierName" FROM supplier ORDER BY supplier_id</select>
+<select id="goods" resultType="map">SELECT product_id AS "id",product_name AS "title",unit_price AS "price" FROM product ORDER BY product_id</select>
+<select id="buyers" resultType="map">SELECT customer_id AS "id",customer_name AS "label",address AS "city" FROM customer ORDER BY customer_id</select>
+<select id="inventory" resultType="map">SELECT i.item_id AS "itemId",g.product_name AS "productName",v.supplier_name AS "supplierName",i.serial_no AS "serialNo",CASE WHEN i.purchase_id IS NULL THEN '未售出' ELSE '已售出' END AS "state" FROM console_product_item i JOIN product g ON g.product_id=i.product_id JOIN supplier v ON v.supplier_id=i.supplier_id ORDER BY i.item_id</select>
+<select id="catalog" resultType="map">SELECT v.supplier_id AS "supplierId",v.supplier_name AS "supplierName",g.product_id AS "productId",g.product_name AS "productName" FROM supplier_product r JOIN supplier v ON v.supplier_id=r.supplier_id JOIN product g ON g.product_id=r.product_id ORDER BY v.supplier_id,g.product_id</select>
+<select id="sold" resultType="map">SELECT p.purchase_id AS "saleId",i.item_id AS "itemId",i.serial_no AS "serialNo",g.product_id AS "productId",g.product_name AS "productName",v.supplier_id AS "supplierId",v.supplier_name AS "supplierName",b.customer_id AS "customerId",b.customer_name AS "customerName",p.unit_price AS "salePrice",p.purchased_at AS "soldOn",p.quantity AS "quantity" FROM purchase p JOIN product g ON g.product_id=p.product_id JOIN supplier v ON v.supplier_id=p.supplier_id JOIN customer b ON b.customer_id=p.customer_id LEFT JOIN console_product_item i ON i.purchase_id=p.purchase_id <where><if test="productId != null">AND g.product_id=#{productId}</if><if test="supplierId != null">AND v.supplier_id=#{supplierId}</if><if test="customerId != null">AND b.customer_id=#{customerId}</if></where> ORDER BY p.purchase_id,i.item_id</select>
+<select id="soldKinds" resultType="map">SELECT DISTINCT g.product_id AS "productId",g.product_name AS "productName" FROM product g JOIN purchase p ON p.product_id=g.product_id WHERE p.supplier_id=#{id} ORDER BY g.product_id</select>
+<select id="purchasingClients" resultType="map">SELECT DISTINCT b.customer_id AS "customerId",b.customer_name AS "customerName" FROM customer b JOIN purchase p ON p.customer_id=b.customer_id WHERE p.supplier_id=#{id} ORDER BY b.customer_id</select>
+<select id="serviceClients" resultType="map">SELECT DISTINCT b.customer_id AS "customerId",b.customer_name AS "customerName" FROM customer b JOIN purchase p ON p.customer_id=b.customer_id JOIN product_service s ON s.purchase_id=p.purchase_id WHERE p.supplier_id=#{id} ORDER BY b.customer_id</select>
+<select id="serviceRows" resultType="map">SELECT s.service_id AS "id",CONCAT(s.service_type,'：',COALESCE(s.service_note,'')) AS "description",b.customer_name AS "customerName",s.serviced_at AS "serviceDate" FROM product_service s JOIN purchase p ON p.purchase_id=s.purchase_id JOIN customer b ON b.customer_id=p.customer_id WHERE p.supplier_id=#{id} ORDER BY s.service_id</select>
+<resultMap id="vendorGraph" type="study.console.Models$Vendor">
+ <id column="id" property="supplierId"/><result column="label" property="supplierName"/>
+ <collection property="products" column="id" select="soldKinds" fetchType="eager"/>
+ <collection property="customers" column="id" select="purchasingClients" fetchType="eager"/>
+ <collection property="services" column="id" select="serviceRows" fetchType="eager"/>
+</resultMap>
+<select id="profile" resultMap="vendorGraph">SELECT supplier_id AS id,supplier_name AS label FROM supplier WHERE supplier_id=#{id}</select></mapper>

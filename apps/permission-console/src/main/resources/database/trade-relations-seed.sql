@@ -1,0 +1,15 @@
+INSERT INTO lab_trade_customer_profile SELECT 1,'VIP001','金卡','2026-01-10' WHERE NOT EXISTS(SELECT 1 FROM lab_trade_customer_profile) AND EXISTS(SELECT 1 FROM lab_trade_customer WHERE id=1);
+INSERT INTO lab_trade_customer_profile SELECT 2,'VIP002','银卡','2026-02-12' WHERE NOT EXISTS(SELECT 1 FROM lab_trade_customer_profile WHERE customer_id=2) AND EXISTS(SELECT 1 FROM lab_trade_customer WHERE id=2);
+INSERT INTO lab_trade_customer_profile SELECT 3,'VIP003','普通','2026-03-18' WHERE NOT EXISTS(SELECT 1 FROM lab_trade_customer_profile WHERE customer_id=3) AND EXISTS(SELECT 1 FROM lab_trade_customer WHERE id=3);
+INSERT INTO lab_trade_supplier SELECT 1,'华辰数码供应商','杭州' WHERE NOT EXISTS(SELECT 1 FROM lab_trade_supplier WHERE id=1);
+INSERT INTO lab_trade_supplier SELECT 2,'远航电子供应商','深圳' WHERE NOT EXISTS(SELECT 1 FROM lab_trade_supplier WHERE id=2);
+INSERT INTO lab_trade_supplier SELECT 3,'晨星设备供应商','南京' WHERE NOT EXISTS(SELECT 1 FROM lab_trade_supplier WHERE id=3);
+INSERT INTO lab_trade_supply SELECT 1,1,4000 WHERE NOT EXISTS(SELECT 1 FROM lab_trade_supply WHERE supplier_id=1 AND product_id=1) AND EXISTS(SELECT 1 FROM lab_trade_product WHERE id=1);
+INSERT INTO lab_trade_supply SELECT 1,2,200 WHERE NOT EXISTS(SELECT 1 FROM lab_trade_supply WHERE supplier_id=1 AND product_id=2) AND EXISTS(SELECT 1 FROM lab_trade_product WHERE id=2);
+INSERT INTO lab_trade_supply SELECT 1,4,900 WHERE NOT EXISTS(SELECT 1 FROM lab_trade_supply WHERE supplier_id=1 AND product_id=4) AND EXISTS(SELECT 1 FROM lab_trade_product WHERE id=4);
+INSERT INTO lab_trade_supply SELECT 2,1,4050 WHERE NOT EXISTS(SELECT 1 FROM lab_trade_supply WHERE supplier_id=2 AND product_id=1) AND EXISTS(SELECT 1 FROM lab_trade_product WHERE id=1);
+INSERT INTO lab_trade_supply SELECT 2,3,80 WHERE NOT EXISTS(SELECT 1 FROM lab_trade_supply WHERE supplier_id=2 AND product_id=3) AND EXISTS(SELECT 1 FROM lab_trade_product WHERE id=3);
+INSERT INTO lab_trade_supply SELECT 2,7,350 WHERE NOT EXISTS(SELECT 1 FROM lab_trade_supply WHERE supplier_id=2 AND product_id=7) AND EXISTS(SELECT 1 FROM lab_trade_product WHERE id=7);
+INSERT INTO lab_trade_supply SELECT 3,2,210 WHERE NOT EXISTS(SELECT 1 FROM lab_trade_supply WHERE supplier_id=3 AND product_id=2) AND EXISTS(SELECT 1 FROM lab_trade_product WHERE id=2);
+INSERT INTO lab_trade_supply SELECT 3,6,280 WHERE NOT EXISTS(SELECT 1 FROM lab_trade_supply WHERE supplier_id=3 AND product_id=6) AND EXISTS(SELECT 1 FROM lab_trade_product WHERE id=6);
+INSERT INTO lab_trade_supply SELECT 3,9,1500 WHERE NOT EXISTS(SELECT 1 FROM lab_trade_supply WHERE supplier_id=3 AND product_id=9) AND EXISTS(SELECT 1 FROM lab_trade_product WHERE id=9);

@@ -1,0 +1,10 @@
+INSERT INTO `user`(id,username,password,email) SELECT 1,'demo1','Demo@123','demo1@example.com' WHERE NOT EXISTS(SELECT 1 FROM `user` WHERE id=1);
+INSERT INTO `user`(id,username,password,email) SELECT 2,'demo2','Demo@123','demo2@example.com' WHERE NOT EXISTS(SELECT 1 FROM `user` WHERE id=2);
+INSERT INTO `user`(id,username,password,email) SELECT 3,'demo3','Demo@123','demo3@example.com' WHERE NOT EXISTS(SELECT 1 FROM `user` WHERE id=3);
+INSERT INTO `user`(id,username,password,email) SELECT 4,'demo4','Demo@123','demo4@example.com' WHERE NOT EXISTS(SELECT 1 FROM `user` WHERE id=4);
+INSERT INTO `user`(id,username,password,email) SELECT 5,'demo5','Demo@123','demo5@example.com' WHERE NOT EXISTS(SELECT 1 FROM `user` WHERE id=5);
+INSERT INTO `user`(id,username,password,email) SELECT 6,'demo6','Demo@123','demo6@example.com' WHERE NOT EXISTS(SELECT 1 FROM `user` WHERE id=6);
+INSERT INTO `user`(id,username,password,email) SELECT 7,'demo7','Demo@123','demo7@example.com' WHERE NOT EXISTS(SELECT 1 FROM `user` WHERE id=7);
+INSERT INTO `user`(id,username,password,email) SELECT 8,'demo8','Demo@123','demo8@example.com' WHERE NOT EXISTS(SELECT 1 FROM `user` WHERE id=8);
+INSERT INTO `user`(id,username,password,email) SELECT 9,'demo9','Demo@123','demo9@example.com' WHERE NOT EXISTS(SELECT 1 FROM `user` WHERE id=9);
+INSERT INTO `user`(id,username,password,email) SELECT 10,'demo10','Demo@123','demo10@example.com' WHERE NOT EXISTS(SELECT 1 FROM `user` WHERE id=10);

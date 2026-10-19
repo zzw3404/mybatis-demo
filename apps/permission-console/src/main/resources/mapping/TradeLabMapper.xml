@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="study.trade.TradeMapper">
+ <cache eviction="LRU" flushInterval="60000" size="1024" readOnly="false"/>
+ <sql id="productColumns">id, product_name, category, brand, price, stock, sale_status, brand_id, version, create_time, update_time</sql>
+ <select id="selectAll" resultType="study.trade.TradeModels$Product">SELECT <include refid="productColumns"/> FROM lab_trade_product ORDER BY id</select>
+ <select id="findById" resultType="study.trade.TradeModels$Product">SELECT <include refid="productColumns"/> FROM lab_trade_product WHERE id=#{id}</select>
+ <select id="selectByCondition" resultType="study.trade.TradeModels$Product">
+ SELECT <include refid="productColumns"/> FROM lab_trade_product
+ <where><if test="category != null">AND category=#{category}</if><if test="minimum != null">AND price &gt;= #{minimum}</if><if test="keyword != null">AND product_name LIKE CONCAT('%',#{keyword},'%')</if></where>
+ ORDER BY price DESC, id ASC
+ </select>
+ <select id="countProducts" resultType="long">SELECT COUNT(*) FROM lab_trade_product</select>
+ <select id="page" resultType="study.trade.TradeModels$Product">SELECT <include refid="productColumns"/> FROM lab_trade_product ORDER BY id LIMIT #{size} OFFSET #{offset}</select>
+ <insert id="insert">INSERT INTO lab_trade_product(id,product_name,category,brand,price,stock,sale_status) VALUES(#{id},#{productName},#{category},#{brand},#{price},#{stock},#{saleStatus})</insert>
+ <update id="updateStock">UPDATE lab_trade_product SET stock=#{stock} WHERE id=#{id}</update>
+ <delete id="delete">DELETE FROM lab_trade_product WHERE id=#{id}</delete>
+ <sql id="detailSql">SELECT l.id AS line_id, o.order_no, c.customer_name, p.product_name, p.category,
+ l.quantity, l.deal_price, l.quantity*l.deal_price AS subtotal, o.ordered_on, o.order_status
+ FROM lab_trade_order_line l INNER JOIN lab_trade_order o ON l.order_id=o.id
+ INNER JOIN lab_trade_product p ON l.product_id=p.id INNER JOIN lab_trade_customer c ON o.customer_id=c.id</sql>
+ <select id="selectTradeDetails" resultType="study.trade.TradeModels$Detail">
+ <include refid="detailSql"/>
+ <where><if test="status != null">AND o.order_status=#{status}</if><if test="customer != null">AND c.customer_name LIKE CONCAT('%',#{customer},'%')</if></where>
+ ORDER BY o.ordered_on DESC,o.id,l.id
+ </select>
+ <select id="linesForOrder" resultType="study.trade.TradeModels$Detail"><include refid="detailSql"/> WHERE o.id=#{id} ORDER BY l.id</select>
+ <resultMap id="orderWithLines" type="study.trade.TradeModels$Order">
+  <id column="id" property="id"/><result column="order_no" property="orderNo"/>
+  <result column="customer_name" property="customerName"/><result column="ordered_on" property="orderedOn"/>
+  <result column="order_status" property="orderStatus"/>
+  <collection property="lines" column="id" select="linesForOrder" fetchType="eager"/>
+ </resultMap>
+ <select id="findOrderWithLines" resultMap="orderWithLines">SELECT o.id,o.order_no,c.customer_name,o.ordered_on,o.order_status FROM lab_trade_order o JOIN lab_trade_customer c ON o.customer_id=c.id WHERE o.id=#{id}</select>
+ <select id="ordersForCustomer" resultMap="orderWithLines">SELECT o.id,o.order_no,c.customer_name,o.ordered_on,o.order_status FROM lab_trade_order o JOIN lab_trade_customer c ON o.customer_id=c.id WHERE c.id=#{id} ORDER BY o.id</select>
+ <select id="categorySummary" resultType="map">
+ SELECT p.category AS 分类,SUM(l.quantity) AS 成交件数,SUM(l.quantity*l.deal_price) AS 成交金额
+ FROM lab_trade_order_line l JOIN lab_trade_order o ON l.order_id=o.id JOIN lab_trade_product p ON l.product_id=p.id
+ WHERE o.order_status='已完成' GROUP BY p.category ORDER BY 成交金额 DESC,p.category
+ </select>
+ <select id="findAdvanced" resultType="study.trade.TradeModels$Product">
+ SELECT <include refid="productColumns"/> FROM lab_trade_product
+ <trim prefix="WHERE" prefixOverrides="AND|OR">
+  <if test="keyword != null and keyword != ''">AND product_name LIKE CONCAT('%',#{keyword},'%')</if>
+  <if test="category != null">AND category=#{category}</if>
+  <if test="brandIds != null and brandIds.size() > 0">AND brand_id IN <foreach collection="brandIds" item="brandId" open="(" close=")" separator=",">#{brandId}</foreach></if>
+  <if test="minimum != null">AND price &gt;= #{minimum}</if>
+  <if test="maximum != null">AND price &lt;= #{maximum}</if>
+ </trim>
+ <choose><when test="priceDesc != null and priceDesc">ORDER BY price DESC,id</when><otherwise>ORDER BY id</otherwise></choose>
+ </select>
+ <insert id="insertBatch">
+ INSERT INTO lab_trade_product(id,product_name,category,brand,brand_id,price,stock,sale_status,version,create_time,update_time) VALUES
+ <foreach collection="products" item="p" separator=",">(#{p.id},#{p.productName},#{p.category},#{p.brand},#{p.brandId},#{p.price},#{p.stock},#{p.saleStatus},0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)</foreach>
+ </insert>
+ <update id="updateSelective">
+ UPDATE lab_trade_product
+ <trim prefix="SET" suffixOverrides=",">
+  <if test="productName != null">product_name=#{productName},</if>
+  <if test="price != null">price=#{price},</if>
+  <if test="stock != null">stock=#{stock},</if>
+  <if test="saleStatus != null">sale_status=#{saleStatus},</if>
+  update_time=CURRENT_TIMESTAMP,
+ </trim>
+ WHERE id=#{id}
+ </update>
+ <resultMap id="productBrand" type="study.trade.TradeModels$Product" autoMapping="true">
+  <id column="id" property="id"/>
+  <association property="brandInfo" javaType="study.trade.TradeModels$Brand" columnPrefix="b_" notNullColumn="id">
+   <id column="id" property="id"/><result column="brand_name" property="brandName"/><result column="website" property="website"/>
+  </association>
+ </resultMap>
+ <select id="productsWithBrands" resultMap="productBrand">SELECT p.*,b.id AS b_id,b.brand_name AS b_brand_name,b.website AS b_website FROM lab_trade_product p LEFT JOIN lab_trade_brand b ON p.brand_id=b.id ORDER BY p.id</select>
+ <select id="brandSummary" resultType="map">SELECT b.id AS brand_id,b.brand_name,COUNT(p.id) AS product_count,COALESCE(SUM(p.price),0) AS total_price,COALESCE(AVG(p.price),0) AS average_price,COALESCE(MAX(p.price),0) AS max_price,COALESCE(MIN(p.price),0) AS min_price FROM lab_trade_brand b LEFT JOIN lab_trade_product p ON b.id=p.brand_id GROUP BY b.id,b.brand_name ORDER BY b.id</select>
+</mapper>

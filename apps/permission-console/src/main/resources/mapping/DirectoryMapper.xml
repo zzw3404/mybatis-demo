@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="study.console.DirectoryMapper">
+<resultMap id="teamBase" type="study.console.Models$Team">
+ <id column="dept_id" property="deptId"/><result column="code" property="deptCode"/>
+ <result column="label" property="deptName"/><result column="city" property="city"/><result column="budget_code" property="costCenter"/>
+</resultMap>
+<resultMap id="personBase" type="study.console.Models$Person">
+ <id column="staff_id" property="staffId"/><result column="badge" property="staffNo"/>
+ <result column="full_name" property="staffName"/><result column="position" property="post"/>
+ <result column="lead_id" property="mentorId"/><result column="start_date" property="hiredOn"/>
+ <result column="wage" property="basePay"/><result column="bonus" property="meritPay"/>
+ <result column="team_ref" property="deptId"/><result column="active" property="onJob"/>
+</resultMap>
+<resultMap id="teamNested" type="study.console.Models$Team" extends="teamBase">
+ <collection property="members" column="dept_id" select="members" fetchType="eager"/>
+</resultMap>
+<resultMap id="personNested" type="study.console.Models$Person" extends="personBase">
+ <association property="department" column="team_ref" select="brief" fetchType="eager"/>
+</resultMap>
+<resultMap id="teamJoined" type="study.console.Models$Team" extends="teamBase">
+ <collection property="members" resultMap="personBase" notNullColumn="staff_id"/>
+</resultMap>
+<resultMap id="personJoined" type="study.console.Models$Person" extends="personBase">
+ <association property="department" resultMap="teamBase" notNullColumn="dept_id"/>
+</resultMap>
+<select id="brief" resultMap="teamBase">SELECT * FROM team WHERE dept_id=#{id}</select>
+<select id="team" resultMap="teamNested">SELECT * FROM team WHERE dept_id=#{id}</select>
+<select id="teamJoin" resultMap="teamJoined">
+ SELECT t.*,p.* FROM team t LEFT JOIN person p ON p.team_ref=t.dept_id WHERE t.dept_id=#{id} ORDER BY p.staff_id
+</select>
+<select id="members" resultMap="personBase">SELECT * FROM person WHERE team_ref=#{id} ORDER BY staff_id</select>
+<select id="person" resultMap="personNested">SELECT * FROM person WHERE staff_id=#{id}</select>
+<select id="personJoin" resultMap="personJoined">
+ SELECT p.*,t.* FROM person p JOIN team t ON t.dept_id=p.team_ref WHERE p.staff_id=#{id}
+</select>
+<select id="teams" resultMap="teamBase">
+ SELECT * FROM team <where>
+ <if test="keyword != null">AND (label LIKE CONCAT('%',#{keyword},'%') OR code LIKE CONCAT('%',#{keyword},'%'))</if>
+ <if test="city != null">AND city=#{city}</if>
+ </where> ORDER BY dept_id
+</select>
+<select id="search" resultMap="personNested">
+ SELECT * FROM person <where>
+ <if test="keyword != null">AND (full_name LIKE CONCAT('%',#{keyword},'%') OR position LIKE CONCAT('%',#{keyword},'%'))</if>
+ <if test="post != null">AND position=#{post}</if><if test="deptId != null">AND team_ref=#{deptId}</if>
+ <if test="onJob != null">AND active=#{onJob}</if><if test="minPay != null">AND wage+bonus &gt;= #{minPay}</if>
+ <if test="ids != null and !ids.isEmpty()">AND staff_id IN
+ <foreach collection="ids" item="key" open="(" close=")" separator=",">#{key}</foreach></if>
+ </where>
+ <choose><when test="orderBy == 'pay'">ORDER BY wage+bonus DESC,staff_id</when><otherwise>ORDER BY staff_id</otherwise></choose>
+</select>
+<select id="totals" resultType="map">
+ SELECT t.dept_id AS "deptId",t.label AS "deptName",COUNT(p.staff_id) AS "staffCount",
+ COALESCE(SUM(p.wage+p.bonus),0) AS "totalPay",(SELECT COUNT(*) FROM login_account a JOIN person x ON x.staff_id=a.staff_id WHERE x.team_ref=t.dept_id) AS "accountCount"
+ FROM team t LEFT JOIN person p ON p.team_ref=t.dept_id GROUP BY t.dept_id,t.label ORDER BY t.dept_id
+</select>
+<select id="payroll" resultType="map">
+ SELECT COUNT(*) AS "staff_total",SUM(CASE WHEN active=1 THEN 1 ELSE 0 END) AS "on_job_total",
+ SUM(wage+bonus) AS "pay_total",AVG(wage+bonus) AS "pay_avg",MIN(wage+bonus) AS "pay_min",MAX(wage+bonus) AS "pay_max" FROM person
+</select>
+<insert id="addTeam">INSERT INTO team(dept_id,code,label,city,budget_code) VALUES(#{deptId},#{deptCode},#{deptName},#{city},#{costCenter})</insert>
+<update id="editTeam">UPDATE team <set>
+ <if test="deptCode != null">code=#{deptCode},</if><if test="deptName != null">label=#{deptName},</if>
+ <if test="city != null">city=#{city},</if><if test="costCenter != null">budget_code=#{costCenter},</if>
+ </set>WHERE dept_id=#{deptId}</update>
+<delete id="dropTeam">DELETE FROM team WHERE dept_id=#{id}</delete>
+<insert id="addPerson">
+ <selectKey keyProperty="staffId" resultType="long" order="BEFORE">SELECT COALESCE(MAX(staff_id),7000)+1 FROM person</selectKey>
+ INSERT INTO person(staff_id,badge,full_name,position,lead_id,start_date,wage,bonus,team_ref,active)
+ VALUES(#{staffId},CONCAT('N',#{staffId}),#{staffName},#{post},#{mentorId},#{hiredOn},#{basePay},#{meritPay},#{deptId},#{onJob})
+</insert>
+<update id="editPerson">UPDATE person <set>
+ <if test="staffName != null">full_name=#{staffName},</if><if test="post != null">position=#{post},</if>
+ <if test="basePay != null">wage=#{basePay},</if><if test="meritPay != null">bonus=#{meritPay},</if>
+ <if test="deptId != null">team_ref=#{deptId},</if><if test="onJob != null">active=#{onJob},</if>
+ </set> WHERE staff_id=#{staffId}</update>
+<update id="transfer">UPDATE person SET team_ref=#{team} WHERE staff_id=#{id}</update>
+<update id="leave">UPDATE person SET active=0 WHERE staff_id=#{id}</update>
+</mapper>

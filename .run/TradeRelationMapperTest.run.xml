@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+ <configuration default="false" name="TradeRelationMapperTest（真实MySQL）" type="JUnit" factoryName="JUnit">
+  <module name="permission-console" />
+  <option name="PACKAGE_NAME" value="study.console" />
+  <option name="MAIN_CLASS_NAME" value="study.console.TradeRelationMapperTest" />
+  <option name="TEST_OBJECT" value="class" />
+  <option name="VM_PARAMETERS" value="-Dfile.encoding=UTF-8 -Dtrade.real=true -Dapp.project.db=$PROJECT_DIR$/src/main/resources/common/db.properties" />
+  <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+  <method v="2"><option name="Make" enabled="true" /></method>
+ </configuration>
+</component>

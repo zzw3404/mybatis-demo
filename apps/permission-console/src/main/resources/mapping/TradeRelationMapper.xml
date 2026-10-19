@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="study.trade.TradeRelationMapper">
+ <resultMap id="customerProfile" type="study.trade.RelationModels$Customer">
+  <id property="id" column="id"/><result property="customerName" column="customer_name"/>
+  <association property="profile" javaType="study.trade.RelationModels$Profile" notNullColumn="customer_id" columnPrefix="f_">
+   <id property="customerId" column="customer_id"/><result property="memberNo" column="member_no"/>
+   <result property="memberLevel" column="member_level"/><result property="registeredOn" column="registered_on"/>
+  </association>
+ </resultMap>
+ <sql id="profileSql">SELECT c.id,c.customer_name,f.customer_id AS f_customer_id,f.member_no AS f_member_no,f.member_level AS f_member_level,f.registered_on AS f_registered_on
+ FROM lab_trade_customer c LEFT JOIN lab_trade_customer_profile f ON c.id=f.customer_id</sql>
+ <select id="findCustomerWithProfile" resultMap="customerProfile"><include refid="profileSql"/> WHERE c.id=#{id}</select>
+ <select id="findAllCustomersWithProfiles" resultMap="customerProfile"><include refid="profileSql"/> ORDER BY c.id</select>
+ <resultMap id="customerOrders" type="study.trade.RelationModels$Customer">
+  <id property="id" column="id"/><result property="customerName" column="customer_name"/>
+  <collection property="orders" ofType="study.trade.RelationModels$Sale" notNullColumn="id" columnPrefix="o_">
+   <id property="id" column="id"/><result property="orderNo" column="order_no"/>
+  </collection>
+ </resultMap>
+ <sql id="customerOrdersSql">SELECT c.id,c.customer_name,o.id AS o_id,o.order_no AS o_order_no FROM lab_trade_customer c LEFT JOIN lab_trade_order o ON c.id=o.customer_id</sql>
+ <select id="findCustomerWithOrders" resultMap="customerOrders"><include refid="customerOrdersSql"/> WHERE c.id=#{id} ORDER BY o.id</select>
+ <select id="findAllCustomersWithOrders" resultMap="customerOrders"><include refid="customerOrdersSql"/> ORDER BY c.id,o.id</select>
+ <resultMap id="orderProducts" type="study.trade.RelationModels$Sale">
+  <id property="id" column="id"/><result property="orderNo" column="order_no"/>
+  <collection property="products" ofType="study.trade.RelationModels$Item" columnPrefix="p_" notNullColumn="id">
+   <id property="id" column="id"/><result property="productName" column="product_name"/>
+  </collection>
+ </resultMap>
+ <select id="findOrderWithProducts" resultMap="orderProducts">
+ SELECT o.id,o.order_no,p.id AS p_id,p.product_name AS p_product_name FROM lab_trade_order o
+ LEFT JOIN lab_trade_order_line l ON o.id=l.order_id LEFT JOIN lab_trade_product p ON l.product_id=p.id
+ WHERE o.id=#{id} ORDER BY p.id
+ </select>
+ <resultMap id="productOrders" type="study.trade.RelationModels$Item">
+  <id property="id" column="id"/><result property="productName" column="product_name"/>
+  <collection property="orders" ofType="study.trade.RelationModels$Sale" columnPrefix="o_" notNullColumn="id">
+   <id property="id" column="id"/><result property="orderNo" column="order_no"/>
+  </collection>
+ </resultMap>
+ <select id="findProductWithOrders" resultMap="productOrders">
+ SELECT p.id,p.product_name,o.id AS o_id,o.order_no AS o_order_no FROM lab_trade_product p
+ LEFT JOIN lab_trade_order_line l ON p.id=l.product_id LEFT JOIN lab_trade_order o ON l.order_id=o.id
+ WHERE p.id=#{id} ORDER BY o.id
+ </select>
+ <resultMap id="supplierProducts" type="study.trade.RelationModels$Supplier">
+  <id property="id" column="id"/><result property="supplierName" column="supplier_name"/>
+  <collection property="products" ofType="study.trade.RelationModels$Item" columnPrefix="p_" notNullColumn="id">
+   <id property="id" column="id"/><result property="productName" column="product_name"/>
+  </collection>
+ </resultMap>
+ <select id="findSupplierWithProducts" resultMap="supplierProducts">
+ SELECT s.id,s.supplier_name,p.id AS p_id,p.product_name AS p_product_name FROM lab_trade_supplier s
+ LEFT JOIN lab_trade_supply sp ON s.id=sp.supplier_id LEFT JOIN lab_trade_product p ON sp.product_id=p.id
+ WHERE s.id=#{id} ORDER BY p.id
+ </select>
+ <resultMap id="productSuppliers" type="study.trade.RelationModels$Item">
+  <id property="id" column="id"/><result property="productName" column="product_name"/>
+  <collection property="suppliers" ofType="study.trade.RelationModels$Supplier" columnPrefix="s_" notNullColumn="id">
+   <id property="id" column="id"/><result property="supplierName" column="supplier_name"/>
+  </collection>
+ </resultMap>
+ <select id="findProductWithSuppliers" resultMap="productSuppliers">
+ SELECT p.id,p.product_name,s.id AS s_id,s.supplier_name AS s_supplier_name FROM lab_trade_product p
+ LEFT JOIN lab_trade_supply sp ON p.id=sp.product_id LEFT JOIN lab_trade_supplier s ON sp.supplier_id=s.id
+ WHERE p.id=#{id} ORDER BY s.id
+ </select>
+</mapper>

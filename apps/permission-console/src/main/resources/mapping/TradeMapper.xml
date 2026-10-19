@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="study.console.TradeMapper">
+<select id="vendors" resultType="map">SELECT id,label AS "supplierName" FROM vendor ORDER BY id</select>
+<select id="goods" resultType="map">SELECT id,title,unit_price AS "price" FROM goods ORDER BY id</select>
+<select id="buyers" resultType="map">SELECT id,label,city FROM buyer ORDER BY id</select>
+<select id="inventory" resultType="map">
+ SELECT i.id AS "itemId",g.title AS "productName",v.label AS "supplierName",i.serial_code AS "serialNo",
+ CASE WHEN p.id IS NULL THEN '未售出' ELSE '已售出' END AS "state" FROM inventory i
+ JOIN goods g ON g.id=i.goods_id JOIN vendor v ON v.id=i.vendor_id LEFT JOIN purchase p ON p.item_id=i.id ORDER BY i.id
+</select>
+<select id="catalog" resultType="map">
+ SELECT v.id AS "supplierId",v.label AS "supplierName",g.id AS "productId",g.title AS "productName"
+ FROM vendor_goods r JOIN vendor v ON v.id=r.vendor_id JOIN goods g ON g.id=r.goods_id ORDER BY v.id,g.id
+</select>
+<select id="sold" resultType="map">
+ SELECT p.id AS "saleId",i.id AS "itemId",i.serial_code AS "serialNo",g.id AS "productId",g.title AS "productName",
+ v.id AS "supplierId",v.label AS "supplierName",b.id AS "customerId",b.label AS "customerName",p.paid AS "salePrice",p.sold_on AS "soldOn"
+ FROM purchase p JOIN inventory i ON i.id=p.item_id JOIN goods g ON g.id=i.goods_id JOIN vendor v ON v.id=i.vendor_id JOIN buyer b ON b.id=p.buyer_id
+ <where><if test="productId != null">AND g.id=#{productId}</if><if test="supplierId != null">AND v.id=#{supplierId}</if><if test="customerId != null">AND b.id=#{customerId}</if></where>
+ ORDER BY p.id
+</select>
+<select id="soldKinds" resultType="map">
+ SELECT DISTINCT g.id AS "productId",g.title AS "productName" FROM goods g JOIN inventory i ON i.goods_id=g.id JOIN purchase p ON p.item_id=i.id WHERE i.vendor_id=#{id} ORDER BY g.id
+</select>
+<select id="purchasingClients" resultType="map">
+ SELECT DISTINCT b.id AS "customerId",b.label AS "customerName" FROM buyer b JOIN purchase p ON p.buyer_id=b.id JOIN inventory i ON i.id=p.item_id WHERE i.vendor_id=#{id} ORDER BY b.id
+</select>
+<select id="serviceClients" resultType="map">
+ SELECT DISTINCT b.id AS "customerId",b.label AS "customerName" FROM buyer b JOIN service_event e ON e.buyer_id=b.id WHERE e.vendor_id=#{id} ORDER BY b.id
+</select>
+<select id="serviceRows" resultType="map">
+ SELECT e.id,e.description,b.label AS "customerName",e.happened_on AS "serviceDate" FROM service_event e JOIN buyer b ON b.id=e.buyer_id WHERE e.vendor_id=#{id} ORDER BY e.id
+</select>
+<resultMap id="vendorGraph" type="study.console.Models$Vendor">
+ <id column="id" property="supplierId"/><result column="label" property="supplierName"/>
+ <collection property="products" column="id" select="soldKinds" fetchType="eager"/>
+ <collection property="customers" column="id" select="purchasingClients" fetchType="eager"/>
+ <collection property="services" column="id" select="serviceRows" fetchType="eager"/>
+</resultMap>
+<select id="profile" resultMap="vendorGraph">SELECT id,label FROM vendor WHERE id=#{id}</select>
+</mapper>

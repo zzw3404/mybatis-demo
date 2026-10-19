@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="study.userapi.persistence.XmlUsers">
+<resultMap id="profile" type="study.userapi.UserRecord">
+ <id column="id" property="id"/><result column="username" property="username"/>
+ <result column="password" property="password"/><result column="email" property="email"/>
+ <result column="created_at" property="createTime"/><result column="updated_at" property="updateTime"/>
+</resultMap>
+<sql id="projection">id,username,password,email,created_at,updated_at</sql>
+<select id="browse" resultMap="profile">SELECT <include refid="projection"/> FROM `user` ORDER BY id</select>
+<select id="browseUsingXml" resultMap="profile">SELECT <include refid="projection"/> FROM `user` ORDER BY id</select>
+<select id="get" resultMap="profile">SELECT <include refid="projection"/> FROM `user` WHERE id=#{key}</select>
+<select id="named" resultMap="profile">SELECT <include refid="projection"/> FROM `user` WHERE username=#{login}</select>
+<select id="containing" resultMap="profile">SELECT <include refid="projection"/> FROM `user` WHERE username LIKE CONCAT('%',#{fragment},'%') ORDER BY id</select>
+<insert id="save" useGeneratedKeys="true" keyProperty="id">
+ INSERT INTO `user`(username,password,email,created_at,updated_at)
+ VALUES(#{username},#{password},#{email},COALESCE(#{createTime},CURRENT_TIMESTAMP),COALESCE(#{updateTime},CURRENT_TIMESTAMP))
+</insert>
+<update id="patch">UPDATE `user` <set>
+ <if test="username != null">username=#{username},</if><if test="password != null">password=#{password},</if>
+ <if test="email != null">email=#{email},</if>updated_at=COALESCE(#{updateTime},CURRENT_TIMESTAMP)
+ </set> WHERE id=#{id}</update>
+<delete id="erase">DELETE FROM `user` WHERE id=#{key}</delete>
+</mapper>

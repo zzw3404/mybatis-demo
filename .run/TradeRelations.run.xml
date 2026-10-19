@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="交易系统关联映射（一对一、一对多、两个多对多）" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="study.trade.RelationRunner" />
+    <module name="permission-console" />
+    <option name="VM_PARAMETERS" value="-Dfile.encoding=UTF-8 -Dapp.project.db=$PROJECT_DIR$/src/main/resources/common/db.properties" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <method v="2"><option name="Make" enabled="true" /></method>
+  </configuration>
+</component>

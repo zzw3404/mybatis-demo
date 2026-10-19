@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="study.console.DirectoryMapper">
+<resultMap id="teamBase" type="study.console.Models$Team">
+ <id column="dept_id" property="deptId"/><result column="code" property="deptCode"/>
+ <result column="label" property="deptName"/><result column="city" property="city"/><result column="budget_code" property="costCenter"/>
+</resultMap>
+<resultMap id="personBase" type="study.console.Models$Person">
+ <id column="staff_id" property="staffId"/><result column="badge" property="staffNo"/>
+ <result column="full_name" property="staffName"/><result column="position" property="post"/>
+ <result column="lead_id" property="mentorId"/><result column="start_date" property="hiredOn"/>
+ <result column="wage" property="basePay"/><result column="bonus" property="meritPay"/>
+ <result column="team_ref" property="deptId"/><result column="active" property="onJob"/>
+</resultMap>
+<resultMap id="teamNested" type="study.console.Models$Team" extends="teamBase">
+ <collection property="members" column="dept_id" select="members" fetchType="eager"/>
+</resultMap>
+<resultMap id="personNested" type="study.console.Models$Person" extends="personBase">
+ <association property="department" column="team_ref" select="brief" fetchType="eager"/>
+</resultMap>
+<resultMap id="teamJoined" type="study.console.Models$Team" extends="teamBase">
+ <collection property="members" resultMap="personBase" notNullColumn="staff_id"/>
+</resultMap>
+<resultMap id="personJoined" type="study.console.Models$Person" extends="personBase">
+ <association property="department" resultMap="teamBase" notNullColumn="dept_id"/>
+</resultMap>
+
+<sql id="departmentColumns">d.deptno AS dept_id,CONCAT('D',d.deptno) AS code,d.dname AS label,d.loc AS city,NULL AS budget_code</sql><sql id="employeeColumns">e.empno AS staff_id,CONCAT('',e.empno) AS badge,e.ename AS full_name,e.job AS position,e.mgr AS lead_id,e.hiredate AS start_date,e.sal AS wage,e.comm AS bonus,e.deptno AS team_ref,(1-e.deleted) AS active</sql>
+<select id="brief" resultMap="teamBase">SELECT <include refid="departmentColumns"/> FROM dept d WHERE d.deptno=#{id} AND d.deleted=0</select>
+<select id="team" resultMap="teamNested">SELECT <include refid="departmentColumns"/> FROM dept d WHERE d.deptno=#{id} AND d.deleted=0</select>
+<select id="teamJoin" resultMap="teamJoined">SELECT <include refid="departmentColumns"/>,<include refid="employeeColumns"/> FROM dept d LEFT JOIN emp e ON e.deptno=d.deptno AND e.deleted=0 WHERE d.deptno=#{id} AND d.deleted=0 ORDER BY e.empno</select>
+<select id="members" resultMap="personBase">SELECT <include refid="employeeColumns"/> FROM emp e WHERE e.deptno=#{id} AND e.deleted=0 ORDER BY e.empno</select>
+<select id="person" resultMap="personNested">SELECT <include refid="employeeColumns"/> FROM emp e WHERE e.empno=#{id} AND e.deleted=0</select>
+<select id="personJoin" resultMap="personJoined">SELECT <include refid="employeeColumns"/>,<include refid="departmentColumns"/> FROM emp e LEFT JOIN dept d ON d.deptno=e.deptno AND d.deleted=0 WHERE e.empno=#{id} AND e.deleted=0</select>
+<select id="teams" resultMap="teamBase">SELECT <include refid="departmentColumns"/> FROM dept d WHERE d.deleted=0
+<if test="keyword != null">AND d.dname LIKE CONCAT('%',#{keyword},'%')</if><if test="city != null">AND d.loc LIKE CONCAT('%',#{city},'%')</if> ORDER BY d.deptno</select>
+<select id="search" resultMap="personNested">SELECT <include refid="employeeColumns"/> FROM emp e <where>
+<choose><when test="onJob != null">e.deleted=1-#{onJob}</when><otherwise>e.deleted=0</otherwise></choose>
+<if test="keyword != null">AND (e.ename LIKE CONCAT('%',#{keyword},'%') OR e.job LIKE CONCAT('%',#{keyword},'%'))</if>
+<if test="post != null">AND e.job=#{post}</if><if test="deptId != null">AND e.deptno=#{deptId}</if>
+<if test="minPay != null">AND COALESCE(e.sal,0)+COALESCE(e.comm,0) &gt;= #{minPay}</if>
+<if test="ids != null and !ids.isEmpty()">AND e.empno IN <foreach collection="ids" item="key" open="(" close=")" separator=",">#{key}</foreach></if>
+</where><choose><when test="orderBy == 'pay'">ORDER BY COALESCE(e.sal,0)+COALESCE(e.comm,0) DESC,e.empno</when><otherwise>ORDER BY e.empno</otherwise></choose></select>
+<select id="totals" resultType="map">SELECT d.deptno AS "deptId",d.dname AS "deptName",COUNT(e.empno) AS "staffCount",COALESCE(SUM(COALESCE(e.sal,0)+COALESCE(e.comm,0)),0) AS "totalPay",(SELECT COUNT(*) FROM login_account a JOIN emp x ON x.empno=a.staff_id WHERE x.deptno=d.deptno AND x.deleted=0) AS "accountCount" FROM dept d LEFT JOIN emp e ON e.deptno=d.deptno AND e.deleted=0 WHERE d.deleted=0 GROUP BY d.deptno,d.dname ORDER BY d.deptno</select>
+<select id="payroll" resultType="map">SELECT COUNT(*) AS "staff_total",SUM(CASE WHEN deleted=0 THEN 1 ELSE 0 END) AS "on_job_total",SUM(COALESCE(sal,0)+COALESCE(comm,0)) AS "pay_total",AVG(COALESCE(sal,0)+COALESCE(comm,0)) AS "pay_avg",MIN(COALESCE(sal,0)+COALESCE(comm,0)) AS "pay_min",MAX(COALESCE(sal,0)+COALESCE(comm,0)) AS "pay_max" FROM emp WHERE deleted=0</select>
+<insert id="addTeam">INSERT INTO dept(deptno,dname,loc,deleted) VALUES(#{deptId},#{deptName},#{city},0)</insert>
+<update id="editTeam">UPDATE dept <set><if test="deptName != null">dname=#{deptName},</if><if test="city != null">loc=#{city},</if></set>WHERE deptno=#{deptId} AND deleted=0</update>
+<delete id="dropTeam">DELETE FROM dept WHERE deptno=#{id}</delete>
+<insert id="addPerson" useGeneratedKeys="true" keyProperty="staffId">INSERT INTO emp(ename,job,mgr,hiredate,sal,comm,deptno,deleted) VALUES(#{staffName},#{post},#{mentorId},#{hiredOn},#{basePay},#{meritPay},#{deptId},1-#{onJob})</insert>
+<update id="editPerson">UPDATE emp <set><if test="staffName != null">ename=#{staffName},</if><if test="post != null">job=#{post},</if><if test="basePay != null">sal=#{basePay},</if><if test="meritPay != null">comm=#{meritPay},</if><if test="deptId != null">deptno=#{deptId},</if><if test="mentorId != null">mgr=#{mentorId},</if><if test="hiredOn != null">hiredate=#{hiredOn},</if><if test="onJob != null">deleted=1-#{onJob},</if></set>WHERE empno=#{staffId}</update>
+<update id="transfer">UPDATE emp SET deptno=#{team} WHERE empno=#{id} AND deleted=0</update>
+<update id="leave">UPDATE emp SET deleted=1 WHERE empno=#{id} AND deleted=0</update>
+</mapper>
